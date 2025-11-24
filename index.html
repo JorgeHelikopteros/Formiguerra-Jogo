@@ -848,7 +848,7 @@
                 
                 <div class="formiga-inputs">
                     <div class="input-group">
-                        <label for="custoFormiga1">Custo</label>
+                        <label for="custoFormiga1">Costo</label>
                         <div class="input-contador">
                             <button class="btn-diminuir" onclick="diminuirCusto(1)">-</button>
                             <input type="number" id="custoFormiga1" value="20" min="1">
@@ -956,16 +956,16 @@
             
             <!-- Botões para sortear cartas - ORDEM ALTERADA -->
             <div class="estacao-botoes">
-                <button class="estacao-btn" id="btn-outono" onclick="sortearCarta('OUTONO')">
+                <button class="estacao-btn" id="btn-outono" onclick="sortearCarta('outono')">
                     Outono
                 </button>
-                <button class="estacao-btn" id="btn-inverno" onclick="sortearCarta('INVERNO')">
+                <button class="estacao-btn" id="btn-inverno" onclick="sortearCarta('inverno')">
                     Inverno
                 </button>
-                <button class="estacao-btn" id="btn-primavera" onclick="sortearCarta('PRIMAVERA')">
+                <button class="estacao-btn" id="btn-primavera" onclick="sortearCarta('primavera')">
                     Primavera
                 </button>
-                <button class="estacao-btn" id="btn-verao" onclick="sortearCarta('VERAO')">
+                <button class="estacao-btn" id="btn-verao" onclick="sortearCarta('verao')">
                     Verão
                 </button>
             </div>
@@ -1633,15 +1633,14 @@
 
         // === CARREGAMENTO AUTOMÁTICO DE CARTAS DAS ESTAÇÕES ===
         function carregarCartasEstacaoAuto(estacao) {
-            // Se já temos cartas carregadas, não faz nada
+            // Se já temos cartas carregadas via upload, não faz nada
             if (cartas[estacao].carregadas) return;
             
             const extensoes = ['.jpg', '.jpeg', '.png'];
-            let cartasCarregadas = 0;
-            const totalCartas = 4;
+            imagensEstacoes[estacao] = [];
             
-            // Tenta carregar 4 cartas da estação
-            for (let i = 1; i <= totalCartas; i++) {
+            // Tenta carregar apenas 4 cartas da estação
+            for (let i = 1; i <= 4; i++) {
                 const nomeArquivo = `${estacao}_${i}`;
                 let cartaCarregada = false;
                 
@@ -1649,75 +1648,21 @@
                     if (!cartaCarregada) {
                         const img = new Image();
                         img.onload = function() {
-                            if (!imagensEstacoes[estacao].includes(this.src)) {
-                                imagensEstacoes[estacao].push(this.src);
-                                cartasCarregadas++;
-                                console.log(`Carta ${estacao}_${i} carregada com sucesso`);
-                            }
+                            imagensEstacoes[estacao].push(this.src);
+                            cartaCarregada = true;
                             
                             // Se todas as 4 cartas foram carregadas, atualiza o sistema
-                            if (cartasCarregadas === totalCartas) {
+                            if (imagensEstacoes[estacao].length === 4) {
                                 finalizarCarregamentoEstacao(estacao);
                             }
                         };
                         img.onerror = function() {
-                            // Se não encontrar, tenta com caminho alternativo
-                            console.log(`Não foi possível carregar ${nomeArquivo}${ext}`);
+                            // Se não encontrar, continua para a próxima extensão
                         };
                         img.src = `${nomeArquivo}${ext}`;
                     }
                 });
             }
-            
-            // Se após tentar todas as extensões ainda não carregou, tenta com estrutura de pastas
-            setTimeout(() => {
-                if (!cartas[estacao].carregadas && imagensEstacoes[estacao].length === 0) {
-                    console.log(`Tentando carregar cartas de ${estacao} com estrutura de pastas...`);
-                    carregarCartasComEstruturaPastas(estacao);
-                }
-            }, 1000);
-        }
-
-        // Função alternativa para carregar cartas com estrutura de pastas
-        function carregarCartasComEstruturaPastas(estacao) {
-            const caminhosAlternativos = [
-                `cartas/${estacao}/`,
-                `imagens/${estacao}/`,
-                `assets/${estacao}/`,
-                `${estacao}/`
-            ];
-            
-            const extensoes = ['.jpg', '.jpeg', '.png'];
-            let cartasCarregadas = 0;
-            const totalCartas = 4;
-            
-            caminhosAlternativos.forEach(caminho => {
-                for (let i = 1; i <= totalCartas; i++) {
-                    const nomeArquivo = `${estacao}_${i}`;
-                    
-                    extensoes.forEach(ext => {
-                        if (cartasCarregadas < totalCartas) {
-                            const img = new Image();
-                            img.onload = function() {
-                                if (!imagensEstacoes[estacao].includes(this.src)) {
-                                    imagensEstacoes[estacao].push(this.src);
-                                    cartasCarregadas++;
-                                    console.log(`Carta ${caminho}${nomeArquivo}${ext} carregada com sucesso`);
-                                }
-                                
-                                // Se todas as 4 cartas foram carregadas, atualiza o sistema
-                                if (cartasCarregadas === totalCartas) {
-                                    finalizarCarregamentoEstacao(estacao);
-                                }
-                            };
-                            img.onerror = function() {
-                                // Continua tentando
-                            };
-                            img.src = `${caminho}${nomeArquivo}${ext}`;
-                        }
-                    });
-                }
-            });
         }
 
         function finalizarCarregamentoEstacao(estacao) {
@@ -1725,12 +1670,11 @@
             cartas[estacao].disponiveis = [...imagensEstacoes[estacao]];
             cartas[estacao].carregadas = true;
             atualizarContador(estacao);
-            console.log(`Cartas de ${estacao} carregadas com sucesso: ${cartas[estacao].todas.length} cartas`);
         }
 
         // === CARREGAMENTO AUTOMÁTICO DA CARTA REVOADA ===
         function carregarCartaRevoadaAuto() {
-            // Se já temos a revoada carregada, não faz nada
+            // Se já temos a revoada carregada via upload, não faz nada
             if (revoadaCarregada) return;
             
             const extensoes = ['.jpg', '.jpeg', '.png'];
@@ -1743,31 +1687,9 @@
                         cartaRevoada = this.src;
                         revoadaCarregada = true;
                         revoadaCarregadaAuto = true;
-                        console.log('Carta Revoada carregada com sucesso');
                     };
                     img.onerror = function() {
-                        // Tenta caminhos alternativos
-                        const caminhosAlternativos = [
-                            'cartas/REVOADA',
-                            'imagens/REVOADA',
-                            'assets/REVOADA'
-                        ];
-                        
-                        caminhosAlternativos.forEach(caminho => {
-                            if (!revoadaCarregadaAuto) {
-                                const imgAlt = new Image();
-                                imgAlt.onload = function() {
-                                    cartaRevoada = this.src;
-                                    revoadaCarregada = true;
-                                    revoadaCarregadaAuto = true;
-                                    console.log(`Carta Revoada carregada de ${caminho}${ext}`);
-                                };
-                                imgAlt.onerror = function() {
-                                    // Continua tentando
-                                };
-                                imgAlt.src = `${caminho}${ext}`;
-                            }
-                        });
+                        // Se não encontrar, continua para a próxima extensão
                     };
                     img.src = `REVOADA${ext}`;
                 }
@@ -2242,43 +2164,16 @@
             gerarNovoTabuleiro();
             
             // Carrega automaticamente as cartas das estações ao iniciar
-            carregarCartasEstacaoAuto('OUTONO');
-            carregarCartasEstacaoAuto('INVERNO');
-            carregarCartasEstacaoAuto('PRIMAVERA');
-            carregarCartasEstacaoAuto('VERAO');
+            carregarCartasEstacaoAuto('outono');
+            carregarCartasEstacaoAuto('inverno');
+            carregarCartasEstacaoAuto('primavera');
+            carregarCartasEstacaoAuto('verao');
             
             // Carrega automaticamente a carta Revoada
             carregarCartaRevoadaAuto();
             
             // Linepithema tem duas colônias desde o início
             atualizarSistemaEnergia2();
-            
-            // Verifica se as cartas foram carregadas após um tempo
-            setTimeout(verificarCarregamentoCartas, 2000);
-        }
-        
-        function verificarCarregamentoCartas() {
-            const estacoes = ['OUTONO', 'INVERNO', 'PRIMAVERA', 'VERAO'];
-            let todasCarregadas = true;
-            
-            estacoes.forEach(estacao => {
-                if (!cartas[estacao].carregadas) {
-                    todasCarregadas = false;
-                    console.log(`Cartas de ${estacao} não carregadas automaticamente`);
-                    // Tenta carregar novamente com estrutura de pastas
-                    carregarCartasComEstruturaPastas(estacao);
-                }
-            });
-            
-            if (!revoadaCarregada) {
-                todasCarregadas = false;
-                console.log('Carta Revoada não carregada automaticamente');
-                carregarCartaRevoadaAuto();
-            }
-            
-            if (todasCarregadas) {
-                console.log('Todas as cartas foram carregadas com sucesso!');
-            }
         }
         
         function draw() {
@@ -2327,15 +2222,13 @@
         }
         
         function sortearCarta(estacao) {
-            // Verifica se as cartas foram carregadas
+            // CORREÇÃO DO BUG: Verifica se as cartas foram carregadas
             if (!cartas[estacao].carregadas || cartas[estacao].todas.length === 0) {
-                alert(`Cartas de ${estacao} não carregadas. As cartas são carregadas automaticamente do repositório. Verifique o console para mais detalhes.`);
-                console.log(`Tentando carregar cartas de ${estacao} novamente...`);
-                carregarCartasEstacaoAuto(estacao);
+                alert(`Cartas de ${estacao} não carregadas. As cartas são carregadas automaticamente do repositório.`);
                 return;
             }
             
-            // Se não há cartas disponíveis, reinicia o baralho
+            // CORREÇÃO DO BUG: Se não há cartas disponíveis, reinicia o baralho
             if (cartas[estacao].disponiveis.length === 0) {
                 cartas[estacao].disponiveis = [...cartas[estacao].todas];
             }
