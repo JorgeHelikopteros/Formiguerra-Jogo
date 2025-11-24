@@ -126,13 +126,6 @@
                 opacity: 1;
             }
         }
-        .upload-section {
-            margin: 10px 0;
-            padding: 10px;
-            background-color: #f0f0f0;
-            border-radius: 5px;
-            text-align: center;
-        }
         .estacao-botoes {
             display: flex;
             gap: 10px;
@@ -553,78 +546,7 @@
             flex: 1;
             min-width: 0;
         }
-
-        /* Modal de Upload */
-        .modal-upload {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 90%;
-            max-height: 90%;
-            overflow-y: auto;
-            text-align: center;
-        }
-
-        .modal-upload h3 {
-            color: #333;
-            margin-bottom: 15px;
-        }
-
-        .upload-simples {
-            margin: 20px 0;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border: 2px dashed #dee2e6;
-        }
-
-        .upload-simples h4 {
-            margin: 0 0 15px 0;
-            color: #495057;
-        }
-
-        .arquivos-info {
-            font-size: 12px;
-            color: #6c757d;
-            margin: 10px 0;
-        }
-
-        .btn-fechar-modal {
-            background: #6c757d;
-            margin-top: 15px;
-        }
-
-        /* Botão de Upload Discreto */
-        .btn-upload-discreto {
-            background-color: #6c757d;
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            opacity: 0.7;
-            transition: opacity 0.3s;
-            margin: 10px 0;
-        }
-
-        .btn-upload-discreto:hover {
-            opacity: 1;
-        }
-
+        
         /* Novos botões Nuvem de Insetos e Capim no Cupim */
         .efeitos-ambiente {
             display: flex;
@@ -792,28 +714,6 @@
     </style>
 </head>
 <body>
-    <!-- Modal de Upload -->
-    <div class="modal-upload" id="modalUpload">
-        <div class="modal-content">
-            <h3>Upload de Cartas do Jogo</h3>
-            <p>Faça o upload das cartas do jogo. O sistema identificará automaticamente cada tipo de carta pelo nome do arquivo.</p>
-            
-            <div class="upload-simples">
-                <h4>Upload de Todas as Cartas</h4>
-                <p class="arquivos-info">Selecione todas as imagens de uma vez. Nomes reconhecidos automaticamente:</p>
-                <ul class="arquivos-info" style="text-align: left; display: inline-block;">
-                    <li><strong>Formigas:</strong> paraponera_clavata, eciton_burchellii, etc.</li>
-                    <li><strong>Revoada:</strong> REVOADA</li>
-                    <li><strong>Estações:</strong> outono_1, inverno_1, primavera_1, verao_1, etc.</li>
-                </ul>
-                <input type="file" id="uploadGeral" accept="image/*" multiple onchange="processarUploadGeral(this.files)">
-                <div id="statusUpload" style="margin-top: 10px; font-size: 12px; color: #28a745;"></div>
-            </div>
-            
-            <button class="btn-fechar-modal" onclick="fecharModalUpload()">Fechar</button>
-        </div>
-    </div>
-
     <h1>Tabuleiro Formiguerra</h1>
     
     <div class="main-container">
@@ -840,11 +740,6 @@
                 <button class="btn-efeito" id="btnNuvemInsetos" onclick="alternarNuvemInsetos()">Nuvem de Insetos</button>
                 <button class="btn-efeito" id="btnCapimCupim" onclick="alternarCapimCupim()">Capim no Cupim</button>
             </div>
-
-            <!-- Botão de Upload Discreto -->
-            <button class="btn-upload-discreto" id="btnUploadDiscreto" onclick="mostrarModalUpload()">
-                Upload de Cartas
-            </button>
         </div>
         
         <div class="right-panel">
@@ -953,7 +848,7 @@
                 
                 <div class="formiga-inputs">
                     <div class="input-group">
-                        <label for="custoFormiga1">Custo</label>
+                        <label for="custoFormiga1">Costo</label>
                         <div class="input-contador">
                             <button class="btn-diminuir" onclick="diminuirCusto(1)">-</button>
                             <input type="number" id="custoFormiga1" value="20" min="1">
@@ -1246,7 +1141,7 @@
         let quantidadeFormigas2 = 1;
         let custoPontoColeta2 = 30;
 
-        // === SISTEMA DE UPLOAD AUTOMÁTICO DE IMAGENS ===
+        // === SISTEMA DE CARREGAMENTO AUTOMÁTICO DE IMAGENS ===
         const imagensFormigas = {};
         const imagensEstacoes = {
             outono: [],
@@ -1254,9 +1149,6 @@
             primavera: [],
             verao: []
         };
-
-        // === CONTROLE DE UPLOAD ===
-        let uploadsCompletos = false;
 
         // === EFEITOS DE AMBIENTE ===
         let nuvemInsetosAtiva = false;
@@ -1444,162 +1336,6 @@
         // === FUNÇÃO PARA CALCULAR DISTÂNCIA HEXAGONAL ===
         function distanciaHexagonal(q1, r1, q2, r2) {
             return (Math.abs(q1 - q2) + Math.abs(q1 + r1 - q2 - r2) + Math.abs(r1 - r2)) / 2;
-        }
-
-        // === MODAL DE UPLOAD ===
-        function mostrarModalUpload() {
-            document.getElementById('modalUpload').style.display = 'flex';
-        }
-
-        function fecharModalUpload() {
-            document.getElementById('modalUpload').style.display = 'none';
-        }
-
-        // === PROCESSAMENTO DE UPLOAD GERAL ===
-        function processarUploadGeral(files) {
-            const statusElement = document.getElementById('statusUpload');
-            let arquivosProcessados = 0;
-            let totalArquivos = files.length;
-
-            statusElement.innerHTML = `Processando ${arquivosProcessados}/${totalArquivos} arquivos...`;
-
-            for (let file of files) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const nomeArquivo = file.name.toLowerCase().split('.')[0];
-                    processarArquivoIndividual(nomeArquivo, e.target.result);
-                    
-                    arquivosProcessados++;
-                    statusElement.innerHTML = `Processando ${arquivosProcessados}/${totalArquivos} arquivos...`;
-                    
-                    if (arquivosProcessados === totalArquivos) {
-                        statusElement.innerHTML = `<span style="color: #28a745;">Todos os ${totalArquivos} arquivos processados com sucesso!</span>`;
-                        verificarUploadsCompletos();
-                    }
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function processarArquivoIndividual(nomeArquivo, dataURL) {
-            // Verifica se é uma formiga
-            const especies = Object.keys(especiesFormigas);
-            for (let especie of especies) {
-                if (nomeArquivo.includes(especie) || nomeArquivo === especie) {
-                    imagensFormigas[especie] = dataURL;
-                    console.log(`Imagem carregada para ${especie}`);
-                    return;
-                }
-            }
-
-            // Verifica se é a carta Revoada
-            if (nomeArquivo.includes('revoada')) {
-                cartaRevoada = dataURL;
-                revoadaCarregada = true;
-                console.log('Carta Revoada carregada');
-                return;
-            }
-
-            // Verifica se é carta de estação
-            const estacoes = ['outono', 'inverno', 'primavera', 'verao'];
-            for (let estacao of estacoes) {
-                if (nomeArquivo.includes(estacao)) {
-                    if (!imagensEstacoes[estacao].includes(dataURL)) {
-                        imagensEstacoes[estacao].push(dataURL);
-                        console.log(`Carta carregada para ${estacao}`);
-                        
-                        // Se temos 4 cartas para esta estação, marca como carregada
-                        if (imagensEstacoes[estacao].length >= 4 && !cartas[estacao].carregadas) {
-                            finalizarCarregamentoEstacao(estacao);
-                        }
-                    }
-                    return;
-                }
-            }
-
-            console.log(`Arquivo ${nomeArquivo} não reconhecido automaticamente`);
-        }
-
-        // === VERIFICAÇÃO DE UPLOADS COMPLETOS ===
-        function verificarUploadsCompletos() {
-            let todasCarregadas = true;
-            
-            // Verifica formigas
-            const especiesParaVerificar = Object.keys(especiesFormigas);
-            for (let especie of especiesParaVerificar) {
-                if (!imagensFormigas[especie]) {
-                    todasCarregadas = false;
-                    break;
-                }
-            }
-            
-            // Verifica revoada
-            if (!revoadaCarregada) {
-                todasCarregadas = false;
-            }
-            
-            // Verifica estações
-            const estacoes = ['outono', 'inverno', 'primavera', 'verao'];
-            for (let estacao of estacoes) {
-                if (!cartas[estacao].carregadas) {
-                    todasCarregadas = false;
-                    break;
-                }
-            }
-            
-            if (todasCarregadas) {
-                uploadsCompletos = true;
-                document.getElementById('btnUploadDiscreto').style.display = 'none';
-                document.getElementById('statusUpload').innerHTML += '<br><strong>✓ Todas as cartas necessárias foram carregadas!</strong>';
-            } else {
-                // Mantém o botão visível se ainda faltam uploads
-                document.getElementById('btnUploadDiscreto').style.display = 'block';
-            }
-        }
-
-        // === VERIFICAÇÃO DE CARREGAMENTO AUTOMÁTICO ===
-        function verificarCarregamentoAutomatico() {
-            let todasCarregadas = true;
-            
-            // Verifica formigas
-            const especiesParaVerificar = Object.keys(especiesFormigas);
-            for (let especie of especiesParaVerificar) {
-                if (!imagensFormigas[especie]) {
-                    todasCarregadas = false;
-                    break;
-                }
-            }
-            
-            // Verifica revoada
-            if (!revoadaCarregada) {
-                todasCarregadas = false;
-            }
-            
-            // Verifica estações
-            const estacoes = ['outono', 'inverno', 'primavera', 'verao'];
-            for (let estacao of estacoes) {
-                if (!cartas[estacao].carregadas) {
-                    todasCarregadas = false;
-                    break;
-                }
-            }
-            
-            // Se não carregou tudo automaticamente, mostra o botão/modal
-            if (!todasCarregadas) {
-                document.getElementById('btnUploadDiscreto').style.display = 'block';
-                
-                // No mobile, mostra o modal automaticamente após 1 segundo
-                if (isMobileDevice()) {
-                    setTimeout(() => {
-                        if (!uploadsCompletos) {
-                            mostrarModalUpload();
-                        }
-                    }, 1000);
-                }
-            } else {
-                uploadsCompletos = true;
-                document.getElementById('btnUploadDiscreto').style.display = 'none';
-            }
         }
 
         // === FUNÇÕES DO SISTEMA DE ENERGIA ===
@@ -1934,7 +1670,6 @@
             cartas[estacao].disponiveis = [...imagensEstacoes[estacao]];
             cartas[estacao].carregadas = true;
             atualizarContador(estacao);
-            verificarUploadsCompletos();
         }
 
         // === CARREGAMENTO AUTOMÁTICO DA CARTA REVOADA ===
@@ -1952,7 +1687,6 @@
                         cartaRevoada = this.src;
                         revoadaCarregada = true;
                         revoadaCarregadaAuto = true;
-                        verificarUploadsCompletos();
                     };
                     img.onerror = function() {
                         // Se não encontrar, continua para a próxima extensão
@@ -2152,7 +1886,7 @@
                 // Tenta carregar automaticamente primeiro
                 carregarCartaRevoadaAuto();
                 if (!revoadaCarregada) {
-                    alert("Carta Revoada não carregada. Use o botão 'Upload de Cartas' para carregar a imagem.");
+                    alert("Carta Revoada não carregada. As cartas são carregadas automaticamente do repositório.");
                     return;
                 }
             }
@@ -2440,9 +2174,6 @@
             
             // Linepithema tem duas colônias desde o início
             atualizarSistemaEnergia2();
-            
-            // Verifica carregamento automático após 1 segundo
-            setTimeout(verificarCarregamentoAutomatico, 1000);
         }
         
         function draw() {
@@ -2493,7 +2224,7 @@
         function sortearCarta(estacao) {
             // CORREÇÃO DO BUG: Verifica se as cartas foram carregadas
             if (!cartas[estacao].carregadas || cartas[estacao].todas.length === 0) {
-                alert(`Cartas de ${estacao} não carregadas. Use o botão 'Upload de Cartas' para carregar as cartas.`);
+                alert(`Cartas de ${estacao} não carregadas. As cartas são carregadas automaticamente do repositório.`);
                 return;
             }
             
