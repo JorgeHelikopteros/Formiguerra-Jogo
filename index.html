@@ -956,16 +956,16 @@
             
             <!-- Botões para sortear cartas - ORDEM ALTERADA -->
             <div class="estacao-botoes">
-                <button class="estacao-btn" id="btn-outono" onclick="sortearCarta('outono')">
+                <button class="estacao-btn" id="btn-outono" onclick="sortearCarta('OUTONO')">
                     Outono
                 </button>
-                <button class="estacao-btn" id="btn-inverno" onclick="sortearCarta('inverno')">
+                <button class="estacao-btn" id="btn-inverno" onclick="sortearCarta('INVERNO')">
                     Inverno
                 </button>
-                <button class="estacao-btn" id="btn-primavera" onclick="sortearCarta('primavera')">
+                <button class="estacao-btn" id="btn-primavera" onclick="sortearCarta('PRIMAVERA')">
                     Primavera
                 </button>
-                <button class="estacao-btn" id="btn-verao" onclick="sortearCarta('verao')">
+                <button class="estacao-btn" id="btn-verao" onclick="sortearCarta('VERAO')">
                     Verão
                 </button>
             </div>
@@ -2242,10 +2242,10 @@
             gerarNovoTabuleiro();
             
             // Carrega automaticamente as cartas das estações ao iniciar
-            carregarCartasEstacaoAuto('outono');
-            carregarCartasEstacaoAuto('inverno');
-            carregarCartasEstacaoAuto('primavera');
-            carregarCartasEstacaoAuto('verao');
+            carregarCartasEstacaoAuto('OUTONO');
+            carregarCartasEstacaoAuto('INVERNO');
+            carregarCartasEstacaoAuto('PRIMAVERA');
+            carregarCartasEstacaoAuto('VERAO');
             
             // Carrega automaticamente a carta Revoada
             carregarCartaRevoadaAuto();
@@ -2258,7 +2258,7 @@
         }
         
         function verificarCarregamentoCartas() {
-            const estacoes = ['outono', 'inverno', 'primavera', 'verao'];
+            const estacoes = ['OUTONO', 'INVERNO', 'PRIMAVERA', 'VERAO'];
             let todasCarregadas = true;
             
             estacoes.forEach(estacao => {
