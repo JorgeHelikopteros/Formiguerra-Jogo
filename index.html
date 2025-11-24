@@ -1,0 +1,2523 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabuleiro Formiguerra</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+        }
+        .main-container {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            width: 100%;
+            align-items: flex-start;
+        }
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-top: 60px;
+        }
+        #canvas-container {
+            position: relative;
+            display: inline-block;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            background-color: transparent;
+            margin-bottom: 15px;
+            transition: all 0.3s ease-out;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        .controls {
+            margin: 15px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        button {
+            padding: 8px 15px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 12px;
+        }
+        button:hover:not(:disabled) {
+            opacity: 0.9;
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-tabuleiro {
+            background-color: #4CAF50;
+        }
+        button#salvar {
+            background-color: #2196F3;
+        }
+        button#salvar:hover {
+            background-color: #0b7dda;
+        }
+        .cartas-section {
+            width: 100%;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .area-cartas {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            position: relative;
+            height: 350px;
+        }
+        .bolo-cartas-container {
+            position: relative;
+            width: 350px;
+            height: 350px;
+        }
+        .carta-sorteada {
+            position: absolute;
+            max-width: 250px;
+            max-height: 350px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: all 0.3s ease-out;
+        }
+        .carta-sorteada.nova {
+            animation: aparecerCarta 0.4s ease-out;
+        }
+        @keyframes aparecerCarta {
+            0% {
+                transform: scale(2) translateY(-100px) rotate(0deg);
+                opacity: 0;
+            }
+            70% {
+                transform: scale(1.1) translateY(10px) rotate(var(--rotacao-final));
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1) translateY(0) rotate(var(--rotacao-final));
+                opacity: 1;
+            }
+        }
+        .upload-section {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .estacao-botoes {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .estacao-btn {
+            padding: 10px 20px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        #btn-primavera { background-color: #4CAF50; }
+        #btn-verao { background-color: #FF9800; }
+        #btn-outono { background-color: #795548; }
+        #btn-inverno { background-color: #2196F3; }
+        .info-cartas {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .contador-cartas {
+            background-color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            border: 1px solid #ccc;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        /* Sistema de Combate Compacto */
+        .sistema-combate-centralizado {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            text-align: center;
+            padding: 0 15px;
+        }
+        
+        .combate-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            margin: 15px 0;
+        }
+        
+        .imagem-formiga-container {
+            flex-shrink: 0;
+            text-align: center;
+        }
+        
+        .imagem-formiga {
+            /* Tamanho original para desktop */
+            width: 270px;
+            height: 480px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .dados-combate {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .dados-container {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+        }
+        
+        .dado-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .dado {
+            width: 70px;
+            height: 70px;
+            background-color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dado:hover {
+            transform: scale(1.05);
+        }
+        
+        .dado.rolando {
+            animation: rolar 1s ease-out;
+        }
+        
+        @keyframes rolar {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        
+        .botoes-acoes {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn-acao {
+            padding: 10px 20px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .btn-defesa {
+            background-color: #3498db;
+        }
+        
+        .resultados-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .resultado-linha {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 280px;
+            gap: 15px;
+        }
+        
+        .resultado-rotulo {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 14px;
+            min-width: 40px;
+        }
+        
+        .resultado {
+            padding: 8px 12px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            font-weight: bold;
+            min-width: 120px;
+            font-size: 14px;
+            color: #2c3e50;
+            min-height: 20px;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .calculo-detalhado {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        .instrucoes {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            min-height: auto;
+            font-size: 12px;
+        }
+        
+        .instrucoes h3 {
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .instrucoes p {
+            line-height: 1.4;
+            color: #555;
+            margin-bottom: 0;
+        }
+        
+        /* Sistema Revoada Compacto */
+        .sistema-revoada {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+            padding: 10px;
+        }
+        
+        .btn-revoada {
+            background-color: #9c27b0;
+            padding: 10px 20px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .dado-revoada {
+            width: 50px;
+            height: 50px;
+            background-color: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .dado-revoada.rolando {
+            animation: rolar 1s ease-out;
+        }
+        
+        /* Seletor de Formiga Compacto */
+        .seletor-formiga {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            max-width: 300px;
+            margin: 0 auto 15px auto;
+        }
+        
+        .seletor-formiga select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .info-formiga {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+            text-align: left;
+            font-size: 12px;
+        }
+        
+        .info-formiga div {
+            padding: 4px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        /* Sistema de Energia do Formigueiro */
+        .sistema-energia {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            text-align: center;
+            padding: 0 15px;
+        }
+        
+        .energia-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        
+        .energia-titulo {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .contador-energia {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .valor-energia {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        .btn-energia {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-diminuir {
+            background-color: #f44336;
+        }
+        
+        .formiga-inputs {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .input-group label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .input-contador {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .input-contador button {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .input-contador .btn-diminuir {
+            background-color: #e74c3c;
+        }
+        
+        .input-contador input {
+            width: 50px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 5px;
+            font-size: 14px;
+        }
+        
+        .btn-adicionar-formigas {
+            background-color: #3498db;
+            padding: 10px 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .btn-ponto-coleta {
+            background-color: #2ecc71;
+            padding: 10px 20px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        .mensagem-erro {
+            color: #e74c3c;
+            font-weight: bold;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        /* Layout para dois sistemas de energia lado a lado */
+        .sistemas-energia-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .sistema-energia-individual {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* Modal de Upload */
+        .modal-upload {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            text-align: center;
+        }
+
+        .modal-upload h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .upload-simples {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #dee2e6;
+        }
+
+        .upload-simples h4 {
+            margin: 0 0 15px 0;
+            color: #495057;
+        }
+
+        .arquivos-info {
+            font-size: 12px;
+            color: #6c757d;
+            margin: 10px 0;
+        }
+
+        .btn-fechar-modal {
+            background: #6c757d;
+            margin-top: 15px;
+        }
+
+        /* Botão de Upload Discreto */
+        .btn-upload-discreto {
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            margin: 10px 0;
+        }
+
+        .btn-upload-discreto:hover {
+            opacity: 1;
+        }
+
+        /* Novos botões Nuvem de Insetos e Capim no Cupim */
+        .efeitos-ambiente {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            justify-content: center;
+        }
+        
+        .btn-efeito {
+            padding: 8px 15px;
+            background-color: #8e44ad;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .btn-efeito:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-efeito.ativo {
+            background-color: #27ae60;
+        }
+        
+        /* Controle de Semente */
+        .semente-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .semente-container input {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100px;
+        }
+        
+        .btn-aplicar-semente {
+            background-color: #2196F3; /* Azul */
+        }
+        
+        /* Valor do hexágono */
+        .valor-hex {
+            position: absolute;
+            font-size: 10px;
+            font-weight: bold;
+            color: #000;
+            text-shadow: 0 0 2px white;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Estilos para dispositivos móveis */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .left-panel, .right-panel {
+                width: 100%;
+                align-items: center;
+            }
+            
+            .combate-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            /* MODIFICAÇÃO: Tamanho aumentado apenas para mobile */
+            .imagem-formiga {
+                width: 405px; /* 270px * 1.5 = 405px */
+                height: 720px; /* 480px * 1.5 = 720px */
+            }
+            
+            .sistemas-energia-container {
+                flex-direction: column;
+                gap: 15px;
+                align-items: center;
+            }
+            
+            .sistema-energia-individual {
+                width: 100%;
+                max-width: 400px;
+            }
+            
+            .estacao-botoes {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .estacao-btn {
+                width: 80%;
+            }
+            
+            .sistema-combate-centralizado,
+            .sistema-energia,
+            .cartas-section {
+                width: 100%;
+                padding: 0 10px;
+            }
+            
+            .info-cartas {
+                justify-content: center;
+            }
+            
+            .contador-cartas {
+                font-size: 10px;
+            }
+
+            /* MODIFICAÇÃO: Tabuleiro menor no celular */
+            #canvas-container {
+                transform: scale(0.85);
+                transform-origin: center;
+                margin: -20px 0;
+            }
+
+            /* MODIFICAÇÃO: Centralização melhorada - elementos movidos para direita */
+            .sistema-combate-centralizado,
+            .sistemas-energia-container,
+            .cartas-section {
+                margin-left: 15px;
+                margin-right: 15px;
+            }
+
+            .seletor-formiga {
+                margin-left: 10px;
+                margin-right: 10px;
+            }
+
+            .combate-container {
+                margin-left: 5px;
+                margin-right: 5px;
+            }
+
+            .instrucoes {
+                margin-left: 10px;
+                margin-right: 10px;
+            }
+        }
+
+        /* MODIFICAÇÃO: Ajustes adicionais para telas muito pequenas */
+        @media (max-width: 480px) {
+            #canvas-container {
+                transform: scale(0.75);
+                margin: -30px 0;
+            }
+            
+            .imagem-formiga {
+                width: 320px;
+                height: 569px;
+            }
+            
+            .sistema-combate-centralizado,
+            .sistemas-energia-container,
+            .cartas-section {
+                margin-left: 20px;
+                margin-right: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal de Upload -->
+    <div class="modal-upload" id="modalUpload">
+        <div class="modal-content">
+            <h3>Upload de Cartas do Jogo</h3>
+            <p>Faça o upload das cartas do jogo. O sistema identificará automaticamente cada tipo de carta pelo nome do arquivo.</p>
+            
+            <div class="upload-simples">
+                <h4>Upload de Todas as Cartas</h4>
+                <p class="arquivos-info">Selecione todas as imagens de uma vez. Nomes reconhecidos automaticamente:</p>
+                <ul class="arquivos-info" style="text-align: left; display: inline-block;">
+                    <li><strong>Formigas:</strong> paraponera_clavata, eciton_burchellii, etc.</li>
+                    <li><strong>Revoada:</strong> REVOADA</li>
+                    <li><strong>Estações:</strong> outono_1, inverno_1, primavera_1, verao_1, etc.</li>
+                </ul>
+                <input type="file" id="uploadGeral" accept="image/*" multiple onchange="processarUploadGeral(this.files)">
+                <div id="statusUpload" style="margin-top: 10px; font-size: 12px; color: #28a745;"></div>
+            </div>
+            
+            <button class="btn-fechar-modal" onclick="fecharModalUpload()">Fechar</button>
+        </div>
+    </div>
+
+    <h1>Tabuleiro Formiguerra</h1>
+    
+    <div class="main-container">
+        <div class="left-panel">
+            <!-- Controles do Tabuleiro -->
+            <div class="controls">
+                <button class="btn-tabuleiro" id="btnGerarTabuleiro" onclick="iniciarAnimacaoGeracao()">Gerar Novo Tabuleiro</button>
+                <button id="salvar" onclick="salvarImagem()">Salvar Imagem</button>
+                <!-- Botão copiar removido conforme solicitado -->
+            </div>
+            
+            <!-- Controle de Semente -->
+            <div class="semente-container">
+                <label for="sementeInput">Semente:</label>
+                <input type="text" id="sementeInput" value="" placeholder="Deixe vazio para aleatório">
+                <button class="btn-aplicar-semente" onclick="aplicarSemente()">Aplicar Semente</button>
+            </div>
+            
+            <!-- Área do Tabuleiro -->
+            <div id="canvas-container"></div>
+            
+            <!-- Botões Nuvem de Insetos e Capim no Cupim -->
+            <div class="efeitos-ambiente">
+                <button class="btn-efeito" id="btnNuvemInsetos" onclick="alternarNuvemInsetos()">Nuvem de Insetos</button>
+                <button class="btn-efeito" id="btnCapimCupim" onclick="alternarCapimCupim()">Capim no Cupim</button>
+            </div>
+
+            <!-- Botão de Upload Discreto -->
+            <button class="btn-upload-discreto" id="btnUploadDiscreto" onclick="mostrarModalUpload()">
+                Upload de Cartas
+            </button>
+        </div>
+        
+        <div class="right-panel">
+            <!-- Caixa de Uso do Site -->
+            <div class="instrucoes">
+                <h3>Uso do Site</h3>
+                <p>Para jogar o jogo, recomendamos que salvem a imagem do tabuleiro e abram um quadro branco no site "Canva". Desse modo, utilizando as imagens de formiga e formigueiro disponibilizadas, cada jogador será capaz de realizar mudanças no tabuleiro, mesmo estando a distância.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sistema de Combate Centralizado -->
+    <div class="sistema-combate-centralizado">
+        <h3>Sistema de Combate</h3>
+        
+        <!-- Seletor de Formiga -->
+        <div class="seletor-formiga">
+            <h4>Selecione sua Formiga</h4>
+            <select id="seletorFormiga" onchange="atualizarInfoFormiga()">
+                <option value="">-- Escolha uma espécie --</option>
+                <option value="paraponera_clavata">Paraponera clavata</option>
+                <option value="eciton_burchellii">Eciton burchellii</option>
+                <option value="odontomachus_haematodus">Odontomachus haematodus</option>
+                <option value="solenopsis_invicta">Solenopsis invicta</option>
+                <option value="camponotus_chartifex">Camponotus chartifex</option>
+                <option value="pheidole_curupira">Pheidole curupira</option>
+                <option value="linepithema_humile">Linepithema humile</option>
+                <option value="atta_cephalotes">Atta cephalotes</option>
+                <option value="cephalotes_atratus">Cephalotes atratus</option>
+            </select>
+            <div class="info-formiga" id="infoFormiga" style="display: none;">
+                <div><strong>Hábito Alimentar:</strong> <span id="habitoAlimentar">-</span></div>
+                <div><strong>Habito de Nidificação:</strong> <span id="habitoNidificacao">-</span></div>
+                <div><strong>ATK:</strong> <span id="atkBase">0</span></div>
+                <div><strong>DEF:</strong> <span id="defBase">0</span></div>
+                <div><strong>Polimorfismo:</strong> <span id="polimorfismo">Não</span></div>
+            </div>
+        </div>
+        
+        <!-- Container do Combate com Imagem à Esquerda -->
+        <div class="combate-container">
+            <!-- Imagem da Formiga -->
+            <div class="imagem-formiga-container" id="imagemFormigaContainer" style="display: none;">
+                <img id="imagemFormiga" class="imagem-formiga" alt="Imagem da formiga selecionada">
+            </div>
+            
+            <!-- Dados e Ações -->
+            <div class="dados-combate">
+                <div class="dados-container">
+                    <!-- D6 -->
+                    <div class="dado-container">
+                        <h4>D6</h4>
+                        <div class="dado" id="dado6" onclick="rolarDadoIndividual(6)">
+                            <span id="resultado6">6</span>
+                        </div>
+                    </div>
+                    
+                    <!-- D20 -->
+                    <div class="dado-container">
+                        <h4>D20</h4>
+                        <div class="dado" id="dado20" onclick="rolarDadoIndividual(20)">
+                            <span id="resultado20">20</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Botões de Ação -->
+                <div class="botoes-acoes">
+                    <button class="btn-acao" onclick="atacar()">Atacar</button>
+                    <button class="btn-acao btn-defesa" onclick="defender()">Defender</button>
+                </div>
+                
+                <!-- Resultados -->
+                <div class="resultados-container">
+                    <div class="resultado-linha">
+                        <div class="resultado-rotulo">ATK</div>
+                        <div class="resultado" id="resultadoAtk">
+                            <div id="valorAtk"></div>
+                            <div class="calculo-detalhado" id="calculoAtk"></div>
+                        </div>
+                    </div>
+                    <div class="resultado-linha">
+                        <div class="resultado-rotulo">DEF</div>
+                        <div class="resultado" id="resultadoDef">
+                            <div id="valorDef"></div>
+                            <div class="calculo-detalhado" id="calculoDef"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sistemas de Energia do Formigueiro -->
+    <div class="sistemas-energia-container" id="sistemasEnergiaContainer">
+        <!-- Sistema de Energia 1 (sempre visível) -->
+        <div class="sistema-energia-individual">
+            <div class="energia-container">
+                <div class="energia-titulo">Energia do Formigueiro</div>
+                
+                <div class="contador-energia">
+                    <button class="btn-energia btn-diminuir" onclick="diminuirEnergia(1)">-</button>
+                    <div class="valor-energia" id="energiaAtual1">120</div>
+                    <button class="btn-energia" onclick="aumentarEnergia(1)">+</button>
+                </div>
+                
+                <div class="formiga-inputs">
+                    <div class="input-group">
+                        <label for="custoFormiga1">Custo</label>
+                        <div class="input-contador">
+                            <button class="btn-diminuir" onclick="diminuirCusto(1)">-</button>
+                            <input type="number" id="custoFormiga1" value="20" min="1">
+                            <button onclick="aumentarCusto(1)">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="quantidadeFormigas1">Quantidade</label>
+                        <div class="input-contador">
+                            <button class="btn-diminuir" onclick="diminuirQuantidade(1)">-</button>
+                            <input type="number" id="quantidadeFormigas1" value="1" min="1">
+                            <button onclick="aumentarQuantidade(1)">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn-adicionar-formigas" onclick="adicionarFormigas(1)">Adicionar formigas</button>
+                
+                <div class="formiga-inputs">
+                    <div class="input-group">
+                        <label for="custoPontoColeta1">Custo Ponto</label>
+                        <div class="input-contador">
+                            <button class="btn-diminuir" onclick="diminuirCustoPontoColeta(1)">-</button>
+                            <input type="number" id="custoPontoColeta1" value="30" min="1">
+                            <button onclick="aumentarCustoPontoColeta(1)">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn-ponto-coleta" onclick="adicionarPontoColeta(1)">Adicionar ponto de coleta</button>
+                
+                <div class="mensagem-erro" id="mensagemErro1">
+                    Erro: Energia insuficiente!
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sistema de Energia 2 (visível apenas para Linepithema ou após revoada) -->
+        <div class="sistema-energia-individual" id="sistemaEnergia2">
+            <div class="energia-container">
+                <div class="energia-titulo">Energia do Formigueiro 2</div>
+                
+                <div class="contador-energia">
+                    <button class="btn-energia btn-diminuir" onclick="diminuirEnergia(2)">-</button>
+                    <div class="valor-energia" id="energiaAtual2">120</div>
+                    <button class="btn-energia" onclick="aumentarEnergia(2)">+</button>
+                </div>
+                
+                <div class="formiga-inputs">
+                    <div class="input-group">
+                        <label for="custoFormiga2">Custo</label>
+                        <div class="input-contador">
+                            <button class="btn-diminuir" onclick="diminuirCusto(2)">-</button>
+                            <input type="number" id="custoFormiga2" value="20" min="1">
+                            <button onclick="aumentarCusto(2)">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="quantidadeFormigas2">Quantidade</label>
+                        <div class="input-contador">
+                            <button class="btn-diminuir" onclick="diminuirQuantidade(2)">-</button>
+                            <input type="number" id="quantidadeFormigas2" value="1" min="1">
+                            <button onclick="aumentarQuantidade(2)">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn-adicionar-formigas" onclick="adicionarFormigas(2)">Adicionar formigas</button>
+                
+                <div class="formiga-inputs">
+                    <div class="input-group">
+                        <label for="custoPontoColeta2">Custo Ponto</label>
+                        <div class="input-contador">
+                            <button class="btn-diminuir" onclick="diminuirCustoPontoColeta(2)">-</button>
+                            <input type="number" id="custoPontoColeta2" value="30" min="1">
+                            <button onclick="aumentarCustoPontoColeta(2)">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn-ponto-coleta" onclick="adicionarPontoColeta(2)">Adicionar ponto de coleta</button>
+                
+                <div class="mensagem-erro" id="mensagemErro2">
+                    Erro: Energia insuficiente!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção de Cartas Centralizada -->
+    <div class="cartas-section">
+        <!-- Sistema Revoada Centralizado -->
+        <div class="sistema-revoada">
+            <button class="estacao-btn btn-revoada" id="btn-revoada" onclick="tentarRevoada()">
+                Revoada
+            </button>
+            <div class="dado-revoada" id="dado-revoada">-</div>
+        </div>
+
+        <!-- Seção de Cartas das Estações -->
+        <div class="upload-section">
+            <h3>Cartas das Estações</h3>
+            
+            <!-- Botões para sortear cartas - ORDEM ALTERADA -->
+            <div class="estacao-botoes">
+                <button class="estacao-btn" id="btn-outono" onclick="sortearCarta('outono')">
+                    Outono
+                </button>
+                <button class="estacao-btn" id="btn-inverno" onclick="sortearCarta('inverno')">
+                    Inverno
+                </button>
+                <button class="estacao-btn" id="btn-primavera" onclick="sortearCarta('primavera')">
+                    Primavera
+                </button>
+                <button class="estacao-btn" id="btn-verao" onclick="sortearCarta('verao')">
+                    Verão
+                </button>
+            </div>
+        </div>
+        
+        <!-- Contadores de Cartas -->
+        <div class="info-cartas">
+            <div class="contador-cartas" id="contador-outono">Outono: 0/0</div>
+            <div class="contador-cartas" id="contador-inverno">Inverno: 0/0</div>
+            <div class="contador-cartas" id="contador-primavera">Primavera: 0/0</div>
+            <div class="contador-cartas" id="contador-verao">Verão: 0/0</div>
+        </div>
+        
+        <!-- Área de Cartas -->
+        <div class="area-cartas">
+            <div class="bolo-cartas-container" id="bolo-cartas-container">
+                <!-- As cartas sorteadas aparecerão aqui -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === DETECÇÃO DE DISPOSITIVO ===
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   window.innerWidth <= 768;
+        }
+
+        // === CONFIGURAÇÕES DO TABULEIRO ===
+        // MODIFICAÇÃO: Tamanho do hexágono ajustado para mobile
+        let tamanhoHex = isMobileDevice() ? 20 : 25;
+        const raioTabuleiro = 5;
+        
+        // === CORES E QUANTIDADES ===
+        const cores = {
+            "#d2a100": 30,
+            "#7fbf3f": 30,
+            "#40c0f0": 9,
+            "#a80808": 2,
+            "#6a3c0c": 18,
+            "#005508": 2
+        };
+        
+        // Códigos para identificar cupinzeiros e moitas
+        const COR_CUPINZEIRO = "#a80808";  // Vermelho escuro
+        const COR_MOITA = "#005508";       // Verde escuro
+        const COR_AGUA = "#40c0f0";        // Azul (sempre valor 0)
+        
+        let listaCores = [];
+        let coordenadas = [];
+        let canvas;
+        let animandoTabuleiro = false;
+        let sementeAtual = null;
+        
+        // === SISTEMA DE FORMIGAS ===
+        // MODIFICAÇÃO: Solenopsis invicta agora tem polimorfismo
+        const especiesFormigas = {
+            paraponera_clavata: { 
+                nome: "Paraponera clavata", 
+                atk: 8, 
+                def: 0, 
+                polimorfismo: false, 
+                custo: 15,
+                habitoAlimentar: "Carnívora",
+                habitoNidificacao: "Arborícola"
+            },
+            eciton_burchellii: { 
+                nome: "Eciton burchellii", 
+                atk: 5, 
+                def: 2, 
+                polimorfismo: true, 
+                custo: 20,
+                habitoAlimentar: "Carnívora",
+                habitoNidificacao: "Solo"
+            },
+            odontomachus_haematodus: { 
+                nome: "Odontomachus haematodus", 
+                atk: 5, 
+                def: 3, 
+                polimorfismo: false, 
+                custo: 20,
+                habitoAlimentar: "Carnívora",
+                habitoNidificacao: "Solo"
+            },
+            solenopsis_invicta: { 
+                nome: "Solenopsis invicta", 
+                atk: 4, 
+                def: 3, 
+                polimorfismo: true, 
+                custo: 20,
+                habitoAlimentar: "Onívora",
+                habitoNidificacao: "Solo"
+            }, // MODIFICADO: polimorfismo: true
+            camponotus_chartifex: { 
+                nome: "Camponotus chartifex", 
+                atk: 4, 
+                def: 3, 
+                polimorfismo: true, 
+                custo: 20,
+                habitoAlimentar: "Herbívora",
+                habitoNidificacao: "Arborícola"
+            },
+            pheidole_curupira: { 
+                nome: "Pheidole curupira", 
+                atk: 4, 
+                def: 3, 
+                polimorfismo: true, 
+                custo: 20,
+                habitoAlimentar: "Carnívora",
+                habitoNidificacao: "Solo"
+            },
+            linepithema_humile: { 
+                nome: "Linepithema humile", 
+                atk: 3, 
+                def: 5, 
+                polimorfismo: false, 
+                custo: 20,
+                habitoAlimentar: "Herbívora",
+                habitoNidificacao: "Solo"
+            },
+            atta_cephalotes: { 
+                nome: "Atta cephalotes", 
+                atk: 2, 
+                def: 5, 
+                polimorfismo: true, 
+                custo: 20,
+                habitoAlimentar: "Herbívora",
+                habitoNidificacao: "Solo"
+            },
+            cephalotes_atratus: { 
+                nome: "Cephalotes atratus", 
+                atk: 1, 
+                def: 7, 
+                polimorfismo: true, 
+                custo: 25,
+                habitoAlimentar: "Herbívora",
+                habitoNidificacao: "Arborícola"
+            }
+        };
+
+        let formigaSelecionada = null;
+        let resultadoD6 = 0;
+        
+        // === SISTEMA DE CARTAS ===
+        const cartas = {
+            outono: { disponiveis: [], todas: [], carregadas: false },
+            inverno: { disponiveis: [], todas: [], carregadas: false },
+            primavera: { disponiveis: [], todas: [], carregadas: false },
+            verao: { disponiveis: [], todas: [], carregadas: false }
+        };
+
+        // === SISTEMA DE REVOADA ===
+        let cartaRevoada = null;
+        let tentativasRevoada = 0;
+        let resultadoD6Revoada = 0;
+        let revoadaCarregada = false;
+        let revoadaAtiva = false;
+
+        let contadorCartas = 0;
+        const pontoCentral = { x: 175, y: 175 };
+
+        // === SISTEMA DE COMBATE ===
+        let ultimoD20 = 0;
+
+        // === SISTEMA DE ENERGIA DO FORMIGUEIRO ===
+        let energiaAtual1 = 120;
+        let custoFormiga1 = 20;
+        let quantidadeFormigas1 = 1;
+        let custoPontoColeta1 = 30;
+        
+        let energiaAtual2 = 120;
+        let custoFormiga2 = 20;
+        let quantidadeFormigas2 = 1;
+        let custoPontoColeta2 = 30;
+
+        // === SISTEMA DE UPLOAD AUTOMÁTICO DE IMAGENS ===
+        const imagensFormigas = {};
+        const imagensEstacoes = {
+            outono: [],
+            inverno: [],
+            primavera: [],
+            verao: []
+        };
+
+        // === CONTROLE DE UPLOAD ===
+        let uploadsCompletos = false;
+
+        // === EFEITOS DE AMBIENTE ===
+        let nuvemInsetosAtiva = false;
+        let capimCupimAtivo = false;
+
+        // === GERADOR ALEATÓRIO COM SEMENTE ===
+        function geradorAleatorioComSemente(semente) {
+            if (!semente) {
+                // Se não há semente, gera uma aleatória
+                semente = Math.random().toString(36).substring(2, 15);
+                document.getElementById('sementeInput').value = semente;
+            }
+            
+            sementeAtual = semente;
+            
+            // Função de hash simples para gerar números pseudoaleatórios
+            let hash = 0;
+            for (let i = 0; i < semente.length; i++) {
+                hash = ((hash << 5) - hash) + semente.charCodeAt(i);
+                hash = hash & hash; // Converte para inteiro de 32 bits
+            }
+            
+            return function() {
+                hash = ((hash << 5) - hash) + 1;
+                hash = hash & hash;
+                return (hash >>> 0) / 4294967295; // Normaliza para 0-1
+            };
+        }
+        
+        // === APLICAR SEMENTE ===
+        function aplicarSemente() {
+            const sementeInput = document.getElementById('sementeInput').value;
+            gerarNovoTabuleiro(sementeInput);
+        }
+
+        // === ALTERNAR EFEITOS DE AMBIENTE ===
+        function alternarNuvemInsetos() {
+            nuvemInsetosAtiva = !nuvemInsetosAtiva;
+            const btn = document.getElementById('btnNuvemInsetos');
+            if (nuvemInsetosAtiva) {
+                btn.classList.add('ativo');
+            } else {
+                btn.classList.remove('ativo');
+            }
+            loop(); // Redesenha o tabuleiro para mostrar os valores atualizados
+        }
+
+        function alternarCapimCupim() {
+            capimCupimAtivo = !capimCupimAtivo;
+            const btn = document.getElementById('btnCapimCupim');
+            if (capimCupimAtivo) {
+                btn.classList.add('ativo');
+            } else {
+                btn.classList.remove('ativo');
+            }
+            loop(); // Redesenha o tabuleiro para mostrar os valores atualizados
+        }
+
+        // === CALCULAR VALOR DO HEXÁGONO ===
+        function calcularValorHexagono(q, r, cor) {
+            if (!formigaSelecionada) return null;
+            
+            // ÁGUA SEMPRE TEM VALOR 0
+            if (cor === COR_AGUA) {
+                return 0;
+            }
+            
+            const habitoAlimentar = formigaSelecionada.habitoAlimentar;
+            
+            // CORREÇÃO: Verificar adjacências primeiro (antes de verificar o próprio hexágono)
+            
+            // Verifica se é adjacente a um cupinzeiro (para carnívoras e onívoras)
+            // MODIFICAÇÃO: Solenopsis tem valores 30 e 20 nas adjacências
+            if ((habitoAlimentar === "Carnívora" || habitoAlimentar === "Onívora")) {
+                for (let i = 0; i < coordenadas.length; i++) {
+                    const [qOutro, rOutro] = coordenadas[i];
+                    const corOutro = listaCores[i];
+                    
+                    if (corOutro === COR_CUPINZEIRO && distanciaHexagonal(q, r, qOutro, rOutro) === 1) {
+                        // MODIFICAÇÃO: Solenopsis tem valores 30 e 20
+                        if (formigaSelecionada.nome === "Solenopsis invicta") {
+                            return 30;
+                        }
+                        return 20;
+                    }
+                }
+            }
+            
+            // Verifica se é adjacente a uma moita (para herbívoras e onívoras)
+            if ((habitoAlimentar === "Herbívora" || habitoAlimentar === "Onívora")) {
+                for (let i = 0; i < coordenadas.length; i++) {
+                    const [qOutro, rOutro] = coordenadas[i];
+                    const corOutro = listaCores[i];
+                    
+                    if (corOutro === COR_MOITA && distanciaHexagonal(q, r, qOutro, rOutro) === 1) {
+                        return 20;
+                    }
+                }
+            }
+            
+            // CORREÇÃO: Verificar adjacências de alimento contrário (sempre 20)
+            // Carnívoras adjacentes a moitas (com Nuvem de Insetos ativa)
+            if (nuvemInsetosAtiva && habitoAlimentar === "Carnívora") {
+                for (let i = 0; i < coordenadas.length; i++) {
+                    const [qOutro, rOutro] = coordenadas[i];
+                    const corOutro = listaCores[i];
+                    
+                    if (corOutro === COR_MOITA && distanciaHexagonal(q, r, qOutro, rOutro) === 1) {
+                        return 20;
+                    }
+                }
+            }
+            
+            // Herbívoras adjacentes a cupinzeiros (com Capim no Cupim ativo)
+            if (capimCupimAtivo && habitoAlimentar === "Herbívora") {
+                for (let i = 0; i < coordenadas.length; i++) {
+                    const [qOutro, rOutro] = coordenadas[i];
+                    const corOutro = listaCores[i];
+                    
+                    if (corOutro === COR_CUPINZEIRO && distanciaHexagonal(q, r, qOutro, rOutro) === 1) {
+                        return 20;
+                    }
+                }
+            }
+            
+            // Efeito Nuvem de Insetos: moitas se comportam como cupinzeiros para carnívoras
+            if (nuvemInsetosAtiva && habitoAlimentar === "Carnívora" && cor === COR_MOITA) {
+                return 40;
+            }
+            
+            // Efeito Capim no Cupim: cupinzeiros se comportam como moitas para herbívoras
+            if (capimCupimAtivo && habitoAlimentar === "Herbívora" && cor === COR_CUPINZEIRO) {
+                return 40;
+            }
+            
+            // Verifica se é um cupinzeiro (para carnívoras e onívoras)
+            if (cor === COR_CUPINZEIRO && (habitoAlimentar === "Carnívora" || habitoAlimentar === "Onívora")) {
+                return 40;
+            }
+            
+            // Verifica se é uma moita (para herbívoras e onívoras)
+            if (cor === COR_MOITA && (habitoAlimentar === "Herbívora" || habitoAlimentar === "Onívora")) {
+                return 40;
+            }
+            
+            // Valores base para os diferentes tipos de terreno
+            return calcularValorBase(cor, habitoAlimentar, formigaSelecionada.habitoNidificacao);
+        }
+        
+        // === CALCULAR VALOR BASE (SEM BÔNUS DE CUPINZEIRO/MOITA) ===
+        function calcularValorBase(cor, habitoAlimentar, habitoNidificacao) {
+            // Se é cupinzeiro mas a formiga não é carnívora, conta como solo
+            if (cor === COR_CUPINZEIRO && habitoAlimentar !== "Carnívora" && habitoAlimentar !== "Onívora") {
+                cor = "#d2a100"; // Trata como solo
+            }
+            
+            // Se é moita mas a formiga não é herbívora, conta como vegetação
+            if (cor === COR_MOITA && habitoAlimentar !== "Herbívora" && habitoAlimentar !== "Onívora") {
+                cor = "#7fbf3f"; // Trata como vegetação
+            }
+            
+            if (habitoAlimentar === "Carnívora") {
+                if (habitoNidificacao === "Solo") {
+                    if (cor === "#d2a100") return 15; // Solo
+                    if (cor === "#6a3c0c") return 10; // Árvore
+                    return 10; // Vegetação
+                } else { // Arborícola
+                    if (cor === "#6a3c0c") return 20; // Árvore
+                    return 10; // Solo ou Vegetação
+                }
+            } else if (habitoAlimentar === "Herbívora") {
+                if (habitoNidificacao === "Solo") {
+                    if (cor === "#7fbf3f") return 15; // Vegetação
+                    return 10; // Solo ou Árvore
+                } else { // Arborícola
+                    if (cor === "#6a3c0c") return 20; // Árvore
+                    return 10; // Solo ou Vegetação
+                }
+            } else { // Onívora
+                if (cor === "#d2a100") return 15; // Solo
+                return 10; // Vegetação ou Árvore
+            }
+        }
+        
+        // === FUNÇÃO PARA CALCULAR DISTÂNCIA HEXAGONAL ===
+        function distanciaHexagonal(q1, r1, q2, r2) {
+            return (Math.abs(q1 - q2) + Math.abs(q1 + r1 - q2 - r2) + Math.abs(r1 - r2)) / 2;
+        }
+
+        // === MODAL DE UPLOAD ===
+        function mostrarModalUpload() {
+            document.getElementById('modalUpload').style.display = 'flex';
+        }
+
+        function fecharModalUpload() {
+            document.getElementById('modalUpload').style.display = 'none';
+        }
+
+        // === PROCESSAMENTO DE UPLOAD GERAL ===
+        function processarUploadGeral(files) {
+            const statusElement = document.getElementById('statusUpload');
+            let arquivosProcessados = 0;
+            let totalArquivos = files.length;
+
+            statusElement.innerHTML = `Processando ${arquivosProcessados}/${totalArquivos} arquivos...`;
+
+            for (let file of files) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const nomeArquivo = file.name.toLowerCase().split('.')[0];
+                    processarArquivoIndividual(nomeArquivo, e.target.result);
+                    
+                    arquivosProcessados++;
+                    statusElement.innerHTML = `Processando ${arquivosProcessados}/${totalArquivos} arquivos...`;
+                    
+                    if (arquivosProcessados === totalArquivos) {
+                        statusElement.innerHTML = `<span style="color: #28a745;">Todos os ${totalArquivos} arquivos processados com sucesso!</span>`;
+                        verificarUploadsCompletos();
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function processarArquivoIndividual(nomeArquivo, dataURL) {
+            // Verifica se é uma formiga
+            const especies = Object.keys(especiesFormigas);
+            for (let especie of especies) {
+                if (nomeArquivo.includes(especie) || nomeArquivo === especie) {
+                    imagensFormigas[especie] = dataURL;
+                    console.log(`Imagem carregada para ${especie}`);
+                    return;
+                }
+            }
+
+            // Verifica se é a carta Revoada
+            if (nomeArquivo.includes('revoada')) {
+                cartaRevoada = dataURL;
+                revoadaCarregada = true;
+                console.log('Carta Revoada carregada');
+                return;
+            }
+
+            // Verifica se é carta de estação
+            const estacoes = ['outono', 'inverno', 'primavera', 'verao'];
+            for (let estacao of estacoes) {
+                if (nomeArquivo.includes(estacao)) {
+                    if (!imagensEstacoes[estacao].includes(dataURL)) {
+                        imagensEstacoes[estacao].push(dataURL);
+                        console.log(`Carta carregada para ${estacao}`);
+                        
+                        // Se temos 4 cartas para esta estação, marca como carregada
+                        if (imagensEstacoes[estacao].length >= 4 && !cartas[estacao].carregadas) {
+                            finalizarCarregamentoEstacao(estacao);
+                        }
+                    }
+                    return;
+                }
+            }
+
+            console.log(`Arquivo ${nomeArquivo} não reconhecido automaticamente`);
+        }
+
+        // === VERIFICAÇÃO DE UPLOADS COMPLETOS ===
+        function verificarUploadsCompletos() {
+            let todasCarregadas = true;
+            
+            // Verifica formigas
+            const especiesParaVerificar = Object.keys(especiesFormigas);
+            for (let especie of especiesParaVerificar) {
+                if (!imagensFormigas[especie]) {
+                    todasCarregadas = false;
+                    break;
+                }
+            }
+            
+            // Verifica revoada
+            if (!revoadaCarregada) {
+                todasCarregadas = false;
+            }
+            
+            // Verifica estações
+            const estacoes = ['outono', 'inverno', 'primavera', 'verao'];
+            for (let estacao of estacoes) {
+                if (!cartas[estacao].carregadas) {
+                    todasCarregadas = false;
+                    break;
+                }
+            }
+            
+            if (todasCarregadas) {
+                uploadsCompletos = true;
+                document.getElementById('btnUploadDiscreto').style.display = 'none';
+                document.getElementById('statusUpload').innerHTML += '<br><strong>✓ Todas as cartas necessárias foram carregadas!</strong>';
+            } else {
+                // Mantém o botão visível se ainda faltam uploads
+                document.getElementById('btnUploadDiscreto').style.display = 'block';
+            }
+        }
+
+        // === VERIFICAÇÃO DE CARREGAMENTO AUTOMÁTICO ===
+        function verificarCarregamentoAutomatico() {
+            let todasCarregadas = true;
+            
+            // Verifica formigas
+            const especiesParaVerificar = Object.keys(especiesFormigas);
+            for (let especie of especiesParaVerificar) {
+                if (!imagensFormigas[especie]) {
+                    todasCarregadas = false;
+                    break;
+                }
+            }
+            
+            // Verifica revoada
+            if (!revoadaCarregada) {
+                todasCarregadas = false;
+            }
+            
+            // Verifica estações
+            const estacoes = ['outono', 'inverno', 'primavera', 'verao'];
+            for (let estacao of estacoes) {
+                if (!cartas[estacao].carregadas) {
+                    todasCarregadas = false;
+                    break;
+                }
+            }
+            
+            // Se não carregou tudo automaticamente, mostra o botão/modal
+            if (!todasCarregadas) {
+                document.getElementById('btnUploadDiscreto').style.display = 'block';
+                
+                // No mobile, mostra o modal automaticamente após 1 segundo
+                if (isMobileDevice()) {
+                    setTimeout(() => {
+                        if (!uploadsCompletos) {
+                            mostrarModalUpload();
+                        }
+                    }, 1000);
+                }
+            } else {
+                uploadsCompletos = true;
+                document.getElementById('btnUploadDiscreto').style.display = 'none';
+            }
+        }
+
+        // === FUNÇÕES DO SISTEMA DE ENERGIA ===
+        function atualizarEnergia(sistema) {
+            if (sistema === 1) {
+                document.getElementById('energiaAtual1').textContent = energiaAtual1;
+            } else {
+                document.getElementById('energiaAtual2').textContent = energiaAtual2;
+            }
+        }
+
+        function aumentarEnergia(sistema) {
+            if (sistema === 1) {
+                energiaAtual1 += 5;
+                atualizarEnergia(1);
+            } else {
+                energiaAtual2 += 5;
+                atualizarEnergia(2);
+            }
+        }
+
+        function diminuirEnergia(sistema) {
+            if (sistema === 1) {
+                if (energiaAtual1 >= 5) {
+                    energiaAtual1 -= 5;
+                    atualizarEnergia(1);
+                } else if (energiaAtual1 > 0) {
+                    // Permite diminuir para 0 mesmo que não tenha 5 de energia
+                    energiaAtual1 = 0;
+                    atualizarEnergia(1);
+                }
+            } else {
+                if (energiaAtual2 >= 5) {
+                    energiaAtual2 -= 5;
+                    atualizarEnergia(2);
+                } else if (energiaAtual2 > 0) {
+                    // Permite diminuir para 0 mesmo que não tenha 5 de energia
+                    energiaAtual2 = 0;
+                    atualizarEnergia(2);
+                }
+            }
+        }
+
+        function aumentarCusto(sistema) {
+            if (sistema === 1) {
+                custoFormiga1++;
+                document.getElementById('custoFormiga1').value = custoFormiga1;
+                // Atualiza também o custo do formigueiro 2
+                custoFormiga2 = custoFormiga1;
+                document.getElementById('custoFormiga2').value = custoFormiga2;
+            } else {
+                custoFormiga2++;
+                document.getElementById('custoFormiga2').value = custoFormiga2;
+                // Atualiza também o custo do formigueiro 1
+                custoFormiga1 = custoFormiga2;
+                document.getElementById('custoFormiga1').value = custoFormiga1;
+            }
+        }
+
+        function diminuirCusto(sistema) {
+            if (sistema === 1) {
+                if (custoFormiga1 > 1) {
+                    custoFormiga1--;
+                    document.getElementById('custoFormiga1').value = custoFormiga1;
+                    // Atualiza também o custo do formigueiro 2
+                    custoFormiga2 = custoFormiga1;
+                    document.getElementById('custoFormiga2').value = custoFormiga2;
+                }
+            } else {
+                if (custoFormiga2 > 1) {
+                    custoFormiga2--;
+                    document.getElementById('custoFormiga2').value = custoFormiga2;
+                    // Atualiza também o custo do formigueiro 1
+                    custoFormiga1 = custoFormiga2;
+                    document.getElementById('custoFormiga1').value = custoFormiga1;
+                }
+            }
+        }
+
+        function aumentarQuantidade(sistema) {
+            if (sistema === 1) {
+                quantidadeFormigas1++;
+                document.getElementById('quantidadeFormigas1').value = quantidadeFormigas1;
+            } else {
+                quantidadeFormigas2++;
+                document.getElementById('quantidadeFormigas2').value = quantidadeFormigas2;
+            }
+        }
+
+        function diminuirQuantidade(sistema) {
+            if (sistema === 1) {
+                if (quantidadeFormigas1 > 1) {
+                    quantidadeFormigas1--;
+                    document.getElementById('quantidadeFormigas1').value = quantidadeFormigas1;
+                }
+            } else {
+                if (quantidadeFormigas2 > 1) {
+                    quantidadeFormigas2--;
+                    document.getElementById('quantidadeFormigas2').value = quantidadeFormigas2;
+                }
+            }
+        }
+
+        function aumentarCustoPontoColeta(sistema) {
+            if (sistema === 1) {
+                custoPontoColeta1 += 5;
+                document.getElementById('custoPontoColeta1').value = custoPontoColeta1;
+            } else {
+                custoPontoColeta2 += 5;
+                document.getElementById('custoPontoColeta2').value = custoPontoColeta2;
+            }
+        }
+
+        function diminuirCustoPontoColeta(sistema) {
+            if (sistema === 1) {
+                if (custoPontoColeta1 > 5) {
+                    custoPontoColeta1 -= 5;
+                    document.getElementById('custoPontoColeta1').value = custoPontoColeta1;
+                }
+            } else {
+                if (custoPontoColeta2 > 5) {
+                    custoPontoColeta2 -= 5;
+                    document.getElementById('custoPontoColeta2').value = custoPontoColeta2;
+                }
+            }
+        }
+
+        function adicionarFormigas(sistema) {
+            let custoTotal, energiaAtual;
+            
+            if (sistema === 1) {
+                custoTotal = custoFormiga1 * quantidadeFormigas1;
+                energiaAtual = energiaAtual1;
+            } else {
+                custoTotal = custoFormiga2 * quantidadeFormigas2;
+                energiaAtual = energiaAtual2;
+            }
+            
+            if (energiaAtual >= custoTotal) {
+                if (sistema === 1) {
+                    energiaAtual1 -= custoTotal;
+                    atualizarEnergia(1);
+                    document.getElementById('mensagemErro1').style.display = 'none';
+                } else {
+                    energiaAtual2 -= custoTotal;
+                    atualizarEnergia(2);
+                    document.getElementById('mensagemErro2').style.display = 'none';
+                }
+            } else {
+                if (sistema === 1) {
+                    document.getElementById('mensagemErro1').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('mensagemErro1').style.display = 'none';
+                    }, 3000);
+                } else {
+                    document.getElementById('mensagemErro2').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('mensagemErro2').style.display = 'none';
+                    }, 3000);
+                }
+            }
+        }
+
+        function adicionarPontoColeta(sistema) {
+            let custo, energiaAtual;
+            
+            if (sistema === 1) {
+                custo = custoPontoColeta1;
+                energiaAtual = energiaAtual1;
+            } else {
+                custo = custoPontoColeta2;
+                energiaAtual = energiaAtual2;
+            }
+            
+            if (energiaAtual >= custo) {
+                if (sistema === 1) {
+                    energiaAtual1 -= custo;
+                    atualizarEnergia(1);
+                    document.getElementById('mensagemErro1').style.display = 'none';
+                } else {
+                    energiaAtual2 -= custo;
+                    atualizarEnergia(2);
+                    document.getElementById('mensagemErro2').style.display = 'none';
+                }
+            } else {
+                if (sistema === 1) {
+                    document.getElementById('mensagemErro1').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('mensagemErro1').style.display = 'none';
+                    }, 3000);
+                } else {
+                    document.getElementById('mensagemErro2').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('mensagemErro2').style.display = 'none';
+                    }, 3000);
+                }
+            }
+        }
+
+        function atualizarSistemaEnergia2() {
+            const sistemaEnergia2 = document.getElementById('sistemaEnergia2');
+            const formigaSelecionada = document.getElementById('seletorFormiga').value;
+            
+            // Mostra o segundo sistema de energia apenas para Linepithema ou se a revoada estiver ativa
+            if (formigaSelecionada === 'linepithema_humile' || revoadaAtiva) {
+                sistemaEnergia2.style.display = 'block';
+                
+                // Linepithema começa com 60 de energia em cada formigueiro
+                if (formigaSelecionada === 'linepithema_humile' && energiaAtual1 === 120 && energiaAtual2 === 120) {
+                    energiaAtual1 = 60;
+                    energiaAtual2 = 60;
+                    atualizarEnergia(1);
+                    atualizarEnergia(2);
+                }
+            } else {
+                sistemaEnergia2.style.display = 'none';
+            }
+        }
+
+        // === FUNÇÕES DO SISTEMA DE FORMIGAS ===
+        function atualizarInfoFormiga() {
+            const select = document.getElementById('seletorFormiga');
+            const infoDiv = document.getElementById('infoFormiga');
+            const imagemContainer = document.getElementById('imagemFormigaContainer');
+            const imagemFormiga = document.getElementById('imagemFormiga');
+            const especie = select.value;
+            
+            if (especie && especiesFormigas[especie]) {
+                formigaSelecionada = especiesFormigas[especie];
+                document.getElementById('atkBase').textContent = formigaSelecionada.atk;
+                document.getElementById('defBase').textContent = formigaSelecionada.def;
+                document.getElementById('polimorfismo').textContent = formigaSelecionada.polimorfismo ? 'Sim' : 'Não';
+                document.getElementById('habitoAlimentar').textContent = formigaSelecionada.habitoAlimentar;
+                document.getElementById('habitoNidificacao').textContent = formigaSelecionada.habitoNidificacao;
+                infoDiv.style.display = 'grid';
+                
+                // Define o custo padrão baseado na espécie selecionada
+                custoFormiga1 = formigaSelecionada.custo;
+                document.getElementById('custoFormiga1').value = custoFormiga1;
+                // Atualiza também o custo do formigueiro 2
+                custoFormiga2 = custoFormiga1;
+                document.getElementById('custoFormiga2').value = custoFormiga2;
+                
+                // Carrega a imagem da formiga automaticamente
+                carregarImagemFormiga(especie);
+                imagemContainer.style.display = 'block';
+            } else {
+                formigaSelecionada = null;
+                infoDiv.style.display = 'none';
+                imagemContainer.style.display = 'none';
+            }
+            
+            // Atualiza a visibilidade do segundo sistema de energia
+            atualizarSistemaEnergia2();
+            
+            // Redesenha o tabuleiro para mostrar os valores
+            loop();
+        }
+
+        // === CARREGAMENTO AUTOMÁTICO DE IMAGENS DE FORMIGAS ===
+        function carregarImagemFormiga(especie) {
+            const imagemFormiga = document.getElementById('imagemFormiga');
+            
+            // Se já temos a imagem carregada via upload, usa ela
+            if (imagensFormigas[especie]) {
+                imagemFormiga.src = imagensFormigas[especie];
+                return;
+            }
+            
+            // Tenta carregar a imagem automaticamente da pasta local
+            const extensoes = ['.jpg', '.jpeg', '.png'];
+            let imagemCarregada = false;
+            
+            extensoes.forEach(ext => {
+                if (!imagemCarregada) {
+                    const img = new Image();
+                    img.onload = function() {
+                        imagemFormiga.src = this.src;
+                        imagensFormigas[especie] = this.src;
+                        imagemCarregada = true;
+                    };
+                    img.onerror = function() {
+                        // Se não encontrar, continua para a próxima extensão
+                    };
+                    img.src = `${especie}${ext}`;
+                }
+            });
+            
+            // Se nenhuma imagem for encontrada, mostra placeholder
+            if (!imagemCarregada) {
+                imagemFormiga.src = '';
+                imagemFormiga.alt = 'Imagem não encontrada';
+            }
+        }
+
+        // === CARREGAMENTO AUTOMÁTICO DE CARTAS DAS ESTAÇÕES ===
+        function carregarCartasEstacaoAuto(estacao) {
+            // Se já temos cartas carregadas via upload, não faz nada
+            if (cartas[estacao].carregadas) return;
+            
+            const extensoes = ['.jpg', '.jpeg', '.png'];
+            imagensEstacoes[estacao] = [];
+            
+            // Tenta carregar apenas 4 cartas da estação
+            for (let i = 1; i <= 4; i++) {
+                const nomeArquivo = `${estacao}_${i}`;
+                let cartaCarregada = false;
+                
+                extensoes.forEach(ext => {
+                    if (!cartaCarregada) {
+                        const img = new Image();
+                        img.onload = function() {
+                            imagensEstacoes[estacao].push(this.src);
+                            cartaCarregada = true;
+                            
+                            // Se todas as 4 cartas foram carregadas, atualiza o sistema
+                            if (imagensEstacoes[estacao].length === 4) {
+                                finalizarCarregamentoEstacao(estacao);
+                            }
+                        };
+                        img.onerror = function() {
+                            // Se não encontrar, continua para a próxima extensão
+                        };
+                        img.src = `${nomeArquivo}${ext}`;
+                    }
+                });
+            }
+        }
+
+        function finalizarCarregamentoEstacao(estacao) {
+            cartas[estacao].todas = [...imagensEstacoes[estacao]];
+            cartas[estacao].disponiveis = [...imagensEstacoes[estacao]];
+            cartas[estacao].carregadas = true;
+            atualizarContador(estacao);
+            verificarUploadsCompletos();
+        }
+
+        // === CARREGAMENTO AUTOMÁTICO DA CARTA REVOADA ===
+        function carregarCartaRevoadaAuto() {
+            // Se já temos a revoada carregada via upload, não faz nada
+            if (revoadaCarregada) return;
+            
+            const extensoes = ['.jpg', '.jpeg', '.png'];
+            let revoadaCarregadaAuto = false;
+            
+            extensoes.forEach(ext => {
+                if (!revoadaCarregadaAuto) {
+                    const img = new Image();
+                    img.onload = function() {
+                        cartaRevoada = this.src;
+                        revoadaCarregada = true;
+                        revoadaCarregadaAuto = true;
+                        verificarUploadsCompletos();
+                    };
+                    img.onerror = function() {
+                        // Se não encontrar, continua para a próxima extensão
+                    };
+                    img.src = `REVOADA${ext}`;
+                }
+            });
+        }
+
+        // === ROLAR DADOS INDIVIDUAIS (SEM MODIFICADORES) ===
+        function rolarDadoIndividual(faces) {
+            const dadoElement = document.getElementById(`dado${faces}`);
+            const resultadoElement = document.getElementById(`resultado${faces}`);
+            
+            dadoElement.classList.add('rolando');
+            
+            let rolls = 10;
+            const rollInterval = setInterval(() => {
+                const resultadoParcial = Math.floor(Math.random() * faces) + 1;
+                resultadoElement.textContent = resultadoParcial;
+                rolls--;
+                
+                if (rolls <= 0) {
+                    clearInterval(rollInterval);
+                    const resultadoFinal = Math.floor(Math.random() * faces) + 1;
+                    resultadoElement.textContent = resultadoFinal;
+                    
+                    if (faces === 6) {
+                        resultadoD6 = resultadoFinal;
+                    } else if (faces === 20) {
+                        ultimoD20 = resultadoFinal;
+                    }
+                    
+                    setTimeout(() => {
+                        dadoElement.classList.remove('rolando');
+                    }, 300);
+                }
+            }, 100);
+        }
+
+        // === SISTEMA DE DADOS SIMULTÂNEO ===
+        function rolarDadosSimultaneos() {
+            return new Promise((resolve) => {
+                const dado20 = document.getElementById('dado20');
+                const resultado20 = document.getElementById('resultado20');
+                const dado6 = document.getElementById('dado6');
+                const resultado6 = document.getElementById('resultado6');
+                
+                // Inicia animação em ambos os dados
+                dado20.classList.add('rolando');
+                if (formigaSelecionada && formigaSelecionada.polimorfismo) {
+                    dado6.classList.add('rolando');
+                }
+                
+                let rolls = 10;
+                const rollInterval = setInterval(() => {
+                    // Rola ambos os dados simultaneamente
+                    const resultadoParcial20 = Math.floor(Math.random() * 20) + 1;
+                    const resultadoParcial6 = Math.floor(Math.random() * 6) + 1;
+                    
+                    resultado20.textContent = resultadoParcial20;
+                    if (formigaSelecionada && formigaSelecionada.polimorfismo) {
+                        resultado6.textContent = resultadoParcial6;
+                    }
+                    rolls--;
+                    
+                    if (rolls <= 0) {
+                        clearInterval(rollInterval);
+                        const resultadoFinal20 = Math.floor(Math.random() * 20) + 1;
+                        const resultadoFinal6 = Math.floor(Math.random() * 6) + 1;
+                        
+                        resultado20.textContent = resultadoFinal20;
+                        if (formigaSelecionada && formigaSelecionada.polimorfismo) {
+                            resultado6.textContent = resultadoFinal6;
+                        }
+                        
+                        ultimoD20 = resultadoFinal20;
+                        resultadoD6 = resultadoFinal6;
+                        
+                        setTimeout(() => {
+                            dado20.classList.remove('rolando');
+                            if (formigaSelecionada && formigaSelecionada.polimorfismo) {
+                                dado6.classList.remove('rolando');
+                            }
+                            resolve({
+                                d20: resultadoFinal20,
+                                d6: resultadoFinal6
+                            });
+                        }, 300);
+                    }
+                }, 100);
+            });
+        }
+
+        // === ANIMAÇÃO DE GERAÇÃO DO TABULEIRO ===
+        function iniciarAnimacaoGeracao() {
+            if (animandoTabuleiro) return;
+            
+            animandoTabuleiro = true;
+            const btnGerar = document.getElementById('btnGerarTabuleiro');
+            const textoOriginal = btnGerar.textContent;
+            btnGerar.textContent = 'Gerando...';
+            
+            const totalAnimacoes = 10;
+            const tempoTotal = 500;
+            const intervalo = tempoTotal / totalAnimacoes;
+            
+            let animacaoAtual = 0;
+            
+            const animar = () => {
+                if (animacaoAtual < totalAnimacoes) {
+                    gerarNovoTabuleiro();
+                    animacaoAtual++;
+                    setTimeout(animar, intervalo);
+                } else {
+                    // Finaliza a animação e restaura o botão
+                    btnGerar.textContent = textoOriginal;
+                    animandoTabuleiro = false;
+                }
+            };
+            
+            // Inicia a animação
+            animar();
+        }
+
+        async function atacar() {
+            if (!formigaSelecionada) {
+                alert("Por favor, selecione uma espécie de formiga primeiro!");
+                return;
+            }
+            
+            const resultados = await rolarDadosSimultaneos();
+            
+            let resultadoTotal = resultados.d20 + formigaSelecionada.atk;
+            let bonusPolimorfismo = 0;
+            
+            // MODIFICAÇÃO: Pheidole agora precisa de >=5 no D6 para ganhar bônus de 3
+            // MODIFICAÇÃO: Solenopsis agora também tem polimorfismo
+            if (formigaSelecionada.polimorfismo) {
+                if ((formigaSelecionada.nome === "Pheidole curupira" || formigaSelecionada.nome === "Solenopsis invicta") && resultados.d6 >= 5) {
+                    bonusPolimorfismo = 3;
+                } else if (resultados.d6 >= 5) {
+                    bonusPolimorfismo = 1;
+                }
+                resultadoTotal += bonusPolimorfismo;
+            }
+            
+            // Exibe o cálculo detalhado
+            let calculo = `${resultados.d20} + ${formigaSelecionada.atk}`;
+            if (bonusPolimorfismo > 0) {
+                calculo += ` + ${bonusPolimorfismo} = ${resultadoTotal}`;
+            } else {
+                calculo += ` = ${resultadoTotal}`;
+            }
+            
+            document.getElementById('valorAtk').textContent = resultadoTotal;
+            document.getElementById('calculoAtk').textContent = calculo;
+        }
+
+        async function defender() {
+            if (!formigaSelecionada) {
+                alert("Por favor, selecione uma espécie de formiga primeiro!");
+                return;
+            }
+            
+            const resultados = await rolarDadosSimultaneos();
+            
+            let resultadoTotal = resultados.d20 + formigaSelecionada.def;
+            let bonusPolimorfismo = 0;
+            
+            // MODIFICAÇÃO: Pheidole agora precisa de >=5 no D6 para ganhar bônus de 3
+            // MODIFICAÇÃO: Solenopsis agora também tem polimorfismo
+            if (formigaSelecionada.polimorfismo) {
+                if ((formigaSelecionada.nome === "Pheidole curupira" || formigaSelecionada.nome === "Solenopsis invicta") && resultados.d6 >= 5) {
+                    bonusPolimorfismo = 3;
+                } else if (resultados.d6 >= 5) {
+                    bonusPolimorfismo = 1;
+                }
+                resultadoTotal += bonusPolimorfismo;
+            }
+            
+            // Exibe o cálculo detalhado
+            let calculo = `${resultados.d20} + ${formigaSelecionada.def}`;
+            if (bonusPolimorfismo > 0) {
+                calculo += ` + ${bonusPolimorfismo} = ${resultadoTotal}`;
+            } else {
+                calculo += ` = ${resultadoTotal}`;
+            }
+            
+            document.getElementById('valorDef').textContent = resultadoTotal;
+            document.getElementById('calculoDef').textContent = calculo;
+        }
+
+        // === SISTEMA DE REVOADA ===
+        function tentarRevoada() {
+            if (!revoadaCarregada) {
+                // Tenta carregar automaticamente primeiro
+                carregarCartaRevoadaAuto();
+                if (!revoadaCarregada) {
+                    alert("Carta Revoada não carregada. Use o botão 'Upload de Cartas' para carregar a imagem.");
+                    return;
+                }
+            }
+            
+            if (!cartaRevoada) {
+                alert("Carta Revoada não disponível.");
+                return;
+            }
+            
+            // Rola o D6 com animação
+            rolarDadoRevoada();
+        }
+
+        function rolarDadoRevoada() {
+            const dadoElement = document.getElementById('dado-revoada');
+            dadoElement.classList.add('rolando');
+            
+            let rolls = 10;
+            const rollInterval = setInterval(() => {
+                const resultadoParcial = Math.floor(Math.random() * 6) + 1;
+                dadoElement.textContent = resultadoParcial;
+                rolls--;
+                
+                if (rolls <= 0) {
+                    clearInterval(rollInterval);
+                    const resultadoFinal = Math.floor(Math.random() * 6) + 1;
+                    dadoElement.textContent = resultadoFinal;
+                    resultadoD6Revoada = resultadoFinal;
+                    
+                    setTimeout(() => {
+                        dadoElement.classList.remove('rolando');
+                        verificarResultadoRevoada(resultadoFinal);
+                    }, 300);
+                }
+            }, 100);
+        }
+
+        function verificarResultadoRevoada(resultado) {
+            let sucesso = false;
+            
+            // NOVA LÓGICA: Duas checagens
+            if (tentativasRevoada === 0 && (resultado === 5 || resultado === 6)) {
+                sucesso = true;
+            } else if (tentativasRevoada === 1 && resultado >= 1) {
+                sucesso = true;
+            }
+            
+            tentativasRevoada++;
+            
+            if (sucesso) {
+                adicionarCartaAoBolo(cartaRevoada, 'Revoada');
+                revoadaAtiva = true;
+                atualizarSistemaEnergia2();
+                
+                // Reproduzir cupinzeiros E MOITAS quando a carta de revoada é ativada
+                reproduzirCupinzeiros();
+                reproduzirMoitas();
+                
+                cartaRevoada = null;
+                tentativasRevoada = 0;
+                revoadaCarregada = false;
+                
+                alert("Revoada bem-sucedida! Novos cupinzeiros e moitas apareceram no tabuleiro.");
+            } else if (tentativasRevoada >= 2) {
+                cartaRevoada = null;
+                tentativasRevoada = 0;
+                revoadaCarregada = false;
+                alert("Revoada falhou após 2 tentativas.");
+            } else {
+                alert(`Tentativa ${tentativasRevoada} de 2 falhou. Tente novamente.`);
+            }
+        }
+
+        function adicionarCartaAoBolo(cartaSrc, tipo) {
+            const boloContainer = document.getElementById('bolo-cartas-container');
+            
+            const novaCarta = document.createElement('img');
+            novaCarta.className = 'carta-sorteada nova';
+            novaCarta.src = cartaSrc;
+            novaCarta.alt = `Carta de ${tipo}`;
+            
+            const rotacao = (Math.random() * 14) - 7;
+            novaCarta.style.setProperty('--rotacao-final', `${rotacao}deg`);
+            novaCarta.style.transform = `rotate(${rotacao}deg)`;
+            
+            const offsetX = (Math.random() * 20) - 10;
+            const offsetY = (Math.random() * 20) - 10;
+            
+            novaCarta.style.left = `${pontoCentral.x + offsetX - 125}px`;
+            novaCarta.style.top = `${pontoCentral.y + offsetY - 175}px`;
+            
+            novaCarta.style.zIndex = contadorCartas;
+            contadorCartas++;
+            
+            boloContainer.appendChild(novaCarta);
+            
+            setTimeout(() => {
+                novaCarta.classList.remove('nova');
+            }, 400);
+        }
+
+        // === SISTEMA DE REPRODUÇÃO DE CUPINZEIROS E MOITAS ===
+        
+        // Função para calcular a distância entre dois hexágonos
+        function distanciaHexagonal(q1, r1, q2, r2) {
+            return (Math.abs(q1 - q2) + Math.abs(q1 + r1 - q2 - r2) + Math.abs(r1 - r2)) / 2;
+        }
+        
+        // Função para verificar se uma posição está longe de TODOS os elementos do mesmo tipo
+        function estaLongeDeTodos(q, r, tipo) {
+            const corAlvo = tipo === 'cupinzeiro' ? COR_CUPINZEIRO : COR_MOITA;
+            
+            for (let i = 0; i < coordenadas.length; i++) {
+                const [qOutro, rOutro] = coordenadas[i];
+                const corOutro = listaCores[i];
+                
+                // Verifica apenas elementos do mesmo tipo
+                if (corOutro === corAlvo) {
+                    const distancia = distanciaHexagonal(q, r, qOutro, rOutro);
+                    if (distancia < 2) {
+                        return false; // Muito perto de algum elemento do mesmo tipo
+                    }
+                }
+            }
+            return true; // Está longe de todos os elementos do mesmo tipo
+        }
+        
+        // Função para reproduzir cupinzeiros (chamada quando carta de revoada é ativada)
+        function reproduzirCupinzeiros() {
+            const posicoesValidas = [];
+            
+            // Encontra todas as posições válidas para novos cupinzeiros
+            for (let i = 0; i < coordenadas.length; i++) {
+                const [q, r] = coordenadas[i];
+                const corAtual = listaCores[i];
+                
+                // Verifica se é uma posição vazia (não é cupinzeiro nem moita)
+                if (corAtual !== COR_CUPINZEIRO && corAtual !== COR_MOITA) {
+                    // Verifica se está longe de TODOS os cupinzeiros existentes
+                    if (estaLongeDeTodos(q, r, 'cupinzeiro')) {
+                        posicoesValidas.push(i);
+                    }
+                }
+            }
+            
+            // Embaralha as posições válidas
+            for (let i = posicoesValidas.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [posicoesValidas[i], posicoesValidas[j]] = [posicoesValidas[j], posicoesValidas[i]];
+            }
+            
+            // Adiciona novos cupinzeiros (máximo 2)
+            const novosCupinzeiros = Math.min(2, posicoesValidas.length);
+            
+            for (let i = 0; i < novosCupinzeiros; i++) {
+                const indice = posicoesValidas[i];
+                listaCores[indice] = COR_CUPINZEIRO;
+            }
+            
+            if (novosCupinzeiros > 0) {
+                loop(); // Redesenha o tabuleiro
+            }
+        }
+        
+        // Função para reproduzir moitas (chamada quando carta de revoada é ativada)
+        function reproduzirMoitas() {
+            const posicoesValidas = [];
+            
+            // Encontra todas as posições válidas para novas moitas
+            for (let i = 0; i < coordenadas.length; i++) {
+                const [q, r] = coordenadas[i];
+                const corAtual = listaCores[i];
+                
+                // Verifica se é uma posição vazia (não é cupinzeiro nem moita)
+                if (corAtual !== COR_CUPINZEIRO && corAtual !== COR_MOITA) {
+                    // Verifica se está longe de TODAS as moitas existentes
+                    if (estaLongeDeTodos(q, r, 'moita')) {
+                        posicoesValidas.push(i);
+                    }
+                }
+            }
+            
+            // Embaralha as posições válidas
+            for (let i = posicoesValidas.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [posicoesValidas[i], posicoesValidas[j]] = [posicoesValidas[j], posicoesValidas[i]];
+            }
+            
+            // Adiciona novas moitas (máximo 2)
+            const novasMoitas = Math.min(2, posicoesValidas.length);
+            
+            for (let i = 0; i < novasMoitas; i++) {
+                const indice = posicoesValidas[i];
+                listaCores[indice] = COR_MOITA;
+            }
+            
+            if (novasMoitas > 0) {
+                loop(); // Redesenha o tabuleiro
+            }
+        }
+
+        // === GERAÇÃO DE COORDENADAS HEXAGONAIS ===
+        function gerarCoordenadasHex(raio) {
+            const coords = [];
+            for (let q = -raio; q <= raio; q++) {
+                const r1 = Math.max(-raio, -q - raio);
+                const r2 = Math.min(raio, -q + raio);
+                for (let r = r1; r <= r2; r++) {
+                    coords.push([q, r]);
+                }
+            }
+            return coords;
+        }
+        
+        function hexParaCartesian(q, r, size = tamanhoHex) {
+            const x = size * (3/2 * r);
+            const y = size * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r);
+            return [x, y];
+        }
+        
+        function gerarListaCores(coresDict, totalHexes, randomFunc) {
+            let lista = [];
+            for (const [cor, quantidade] of Object.entries(coresDict)) {
+                for (let i = 0; i < quantidade; i++) {
+                    lista.push(cor);
+                }
+            }
+            
+            if (lista.length < totalHexes) {
+                const coresDisponiveis = Object.keys(coresDict);
+                const coresFaltantes = totalHexes - lista.length;
+                for (let i = 0; i < coresFaltantes; i++) {
+                    const corAleatoria = coresDisponiveis[Math.floor(randomFunc() * coresDisponiveis.length)];
+                    lista.push(corAleatoria);
+                }
+            } else if (lista.length > totalHexes) {
+                lista = lista.slice(0, totalHexes);
+            }
+            
+            for (let i = lista.length - 1; i > 0; i--) {
+                const j = Math.floor(randomFunc() * (i + 1));
+                [lista[i], lista[j]] = [lista[j], lista[i]];
+            }
+            
+            return lista;
+        }
+        
+        function desenharHexagono(x, y, raio, cor) {
+            push();
+            translate(x, y);
+            
+            fill(cor);
+            stroke(255);
+            strokeWeight(1.5);
+            
+            beginShape();
+            for (let i = 0; i < 6; i++) {
+                const angulo = radians(60 * i);
+                const px = raio * cos(angulo);
+                const py = raio * sin(angulo);
+                vertex(px, py);
+            }
+            endShape(CLOSE);
+            
+            pop();
+        }
+        
+        function setup() {
+            const container = document.getElementById('canvas-container');
+            // MODIFICAÇÃO: Canvas menor no mobile
+            const canvasSize = isMobileDevice() ? 400 : 500;
+            canvas = createCanvas(canvasSize, canvasSize);
+            canvas.parent(container);
+            
+            gerarNovoTabuleiro();
+            
+            // Carrega automaticamente as cartas das estações ao iniciar
+            carregarCartasEstacaoAuto('outono');
+            carregarCartasEstacaoAuto('inverno');
+            carregarCartasEstacaoAuto('primavera');
+            carregarCartasEstacaoAuto('verao');
+            
+            // Carrega automaticamente a carta Revoada
+            carregarCartaRevoadaAuto();
+            
+            // Linepithema tem duas colônias desde o início
+            atualizarSistemaEnergia2();
+            
+            // Verifica carregamento automático após 1 segundo
+            setTimeout(verificarCarregamentoAutomatico, 1000);
+        }
+        
+        function draw() {
+            clear();
+            translate(width / 2, height / 2);
+            
+            // Remove elementos de texto anteriores
+            const elementosTexto = document.querySelectorAll('.valor-hex');
+            elementosTexto.forEach(el => el.remove());
+            
+            for (let i = 0; i < coordenadas.length; i++) {
+                const [q, r] = coordenadas[i];
+                const [x, y] = hexParaCartesian(q, r);
+                const cor = listaCores[i];
+                
+                desenharHexagono(x, y, tamanhoHex * 0.95, cor);
+                
+                // Se uma formiga está selecionada, exibe o valor do hexágono
+                if (formigaSelecionada) {
+                    const valor = calcularValorHexagono(q, r, cor);
+                    if (valor !== null) {
+                        // Cria um elemento de texto para exibir o valor
+                        const texto = document.createElement('div');
+                        texto.className = 'valor-hex';
+                        texto.textContent = valor;
+                        texto.style.left = `${width/2 + x - 5}px`;
+                        texto.style.top = `${height/2 + y - 5}px`;
+                        document.getElementById('canvas-container').appendChild(texto);
+                    }
+                }
+            }
+            
+            noLoop();
+        }
+        
+        function gerarNovoTabuleiro(semente = null) {
+            const randomFunc = geradorAleatorioComSemente(semente);
+            coordenadas = gerarCoordenadasHex(raioTabuleiro);
+            const totalHexes = coordenadas.length;
+            listaCores = gerarListaCores(cores, totalHexes, randomFunc);
+            loop();
+        }
+        
+        function salvarImagem() {
+            saveCanvas(canvas, 'tabuleiro_formiguerra', 'png');
+        }
+        
+        function sortearCarta(estacao) {
+            // CORREÇÃO DO BUG: Verifica se as cartas foram carregadas
+            if (!cartas[estacao].carregadas || cartas[estacao].todas.length === 0) {
+                alert(`Cartas de ${estacao} não carregadas. Use o botão 'Upload de Cartas' para carregar as cartas.`);
+                return;
+            }
+            
+            // CORREÇÃO DO BUG: Se não há cartas disponíveis, reinicia o baralho
+            if (cartas[estacao].disponiveis.length === 0) {
+                cartas[estacao].disponiveis = [...cartas[estacao].todas];
+            }
+            
+            const boloContainer = document.getElementById('bolo-cartas-container');
+            const indiceAleatorio = Math.floor(Math.random() * cartas[estacao].disponiveis.length);
+            const cartaSorteada = cartas[estacao].disponiveis[indiceAleatorio];
+            
+            cartas[estacao].disponiveis.splice(indiceAleatorio, 1);
+            
+            adicionarCartaAoBolo(cartaSorteada, estacao);
+            atualizarContador(estacao);
+        }
+        
+        function atualizarContador(estacao) {
+            const contadorElement = document.getElementById(`contador-${estacao}`);
+            const total = cartas[estacao].todas.length;
+            const disponiveis = cartas[estacao].disponiveis.length;
+            contadorElement.textContent = `${estacao.charAt(0).toUpperCase() + estacao.slice(1)}: ${disponiveis}/${total}`;
+        }
+    </script>
+</body>
+</html>
